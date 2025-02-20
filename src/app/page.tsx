@@ -1,101 +1,154 @@
+import { unstable_noStore as noStore } from "next/cache";
 import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+import { auth } from "@/auth";
+import { SignInButton, SignOutButton } from "@/components/auth";
+import prisma from "@/lib/prisma";
+import { formatName } from "@/lib/utils";
+
+import type { User } from "@prisma/client";
+import type { Session } from "next-auth";
+
+function UserMenu({ user }: { user: NonNullable<Session["user"]> }) {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="relative group">
+      <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+        {user.image ? (
+          <Image
+            src={user.image}
+            alt={formatName(user.name)}
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
+        ) : (
+          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+            <span className="text-gray-500 text-sm font-medium">
+              {(user.name || "U").charAt(0)}
+            </span>
+          </div>
+        )}
+        <span className="text-sm font-medium text-gray-700">
+          {formatName(user.name)}
+        </span>
+        <svg
+          className="w-4 h-4 text-gray-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      <div className="absolute right-0 mt-1 w-36 py-1 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+        <Link
+          href={`/users/${user.id}`}
+          className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+        >
+          View profile
+        </Link>
+        <SignOutButton />
+      </div>
+    </div>
+  );
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+function UserCard({ user }: { user: User }) {
+  return (
+    <Link
+      href={`/users/${user.id}`}
+      className="block transition-transform hover:scale-[1.02]"
+    >
+      <div className="flex items-center gap-3 p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        {user.image ? (
+          <Image
+            src={user.image}
+            alt={formatName(user.name)}
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+        ) : (
+          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+            <span className="text-gray-500 text-sm font-medium">
+              {(user.name || "User").charAt(0)}
+            </span>
+          </div>
+        )}
+        <div>
+          <div className="font-medium text-gray-900">
+            {formatName(user.name)}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+export default async function Home() {
+  noStore();
+
+  const session = await auth();
+  // limit to 100 users and cache for 60 seconds.
+  const users = await prisma.user.findMany({
+    take: 100,
+    cacheStrategy: {
+      ttl: 60,
+      swr: 60,
+    },
+  });
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-gray-100 z-10">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xl font-bold text-gray-900"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            Superblog
+          </Link>
+          <div>
+            {session?.user ? (
+              <UserMenu user={session.user} />
+            ) : (
+              <SignInButton />
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-4 pt-24 pb-16">
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 font-[family-name:var(--font-geist-sans)]">
+            Superblog
+          </h1>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            A demo application showcasing the power of Prisma Postgres and
+            Next.js
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-2xl font-bold mb-6 text-gray-900">
+            Community Members
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {users.map((user) => (
+              <UserCard
+                key={user.id}
+                user={user}
+              />
+            ))}
+          </div>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
