@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: next-fetch-container
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: next_fetch_db
+
+volumes:
+  db-data:
