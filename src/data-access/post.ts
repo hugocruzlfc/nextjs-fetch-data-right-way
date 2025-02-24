@@ -3,6 +3,8 @@ import "server-only";
 import prisma from "@/lib/prisma";
 import { Post, User } from "@prisma/client";
 import { authCheck } from "./auth-check";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export interface PostWithAuthor extends Post {
   author: User;
@@ -77,4 +79,41 @@ export async function getPostByIdEdit(
   }
 
   return postData;
+}
+
+export async function upsertPost(
+  postId: string | null,
+  title: string,
+  content: string | null,
+  published = false
+) {
+  const session = await authCheck();
+
+  const post = await prisma.post.upsert({
+    where: {
+      id: parseInt(postId ?? "-1"),
+      author: {
+        email: session?.user?.email!,
+      },
+    },
+    update: {
+      title: title.trim(),
+      content: content?.trim(),
+      published,
+    },
+    create: {
+      title: title.trim(),
+      content: content?.trim(),
+      published,
+      author: {
+        connect: {
+          email: session?.user?.email!,
+        },
+      },
+    },
+  });
+
+  revalidatePath(`/posts/${post.id}`);
+  revalidatePath("/posts");
+  redirect(`/posts/${post.id}`);
 }
