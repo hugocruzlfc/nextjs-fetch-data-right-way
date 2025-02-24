@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
 import { auth } from "@/auth";
+import { getPostById } from "@/data-access/post";
 
 export default async function Post({
   params,
@@ -12,12 +13,7 @@ export default async function Post({
 }) {
   const session = await auth();
   const { id } = await params;
-  const post = await prisma.post.findUnique({
-    where: { id: parseInt(id) },
-    include: {
-      author: true,
-    },
-  });
+  const post = await getPostById(id);
 
   if (!post) {
     notFound();
@@ -68,7 +64,7 @@ export default async function Post({
                   </div>
                 )}
                 <Link
-                  href={`/users/${post.authorId}`}
+                  href={`/users/${post.author.id}`}
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   By {formatName(post.author.name)}
@@ -88,7 +84,7 @@ export default async function Post({
 
           <div className="border-t border-gray-100 mt-12 pt-6">
             <Link
-              href={`/users/${post.authorId}`}
+              href={`/users/${post.author.id}`}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               ← Back to author&apos;s profile

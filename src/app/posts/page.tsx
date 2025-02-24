@@ -1,23 +1,11 @@
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
+import { get } from "http";
+import { getPosts } from "@/data-access/post";
 
 export default async function Posts() {
-  const posts = await prisma.post.findMany({
-    include: {
-      author: true,
-    },
-    where: {
-      published: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    cacheStrategy: {
-      ttl: 60,
-      swr: 60,
-    },
-  });
+  const posts = await getPosts();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">

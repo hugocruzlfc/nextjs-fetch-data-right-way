@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 
 import { Post } from "@prisma/client";
 import { publishPost, saveDraft } from "@/actions";
+import { PostWithAuthorDTO } from "@/data-access/post";
 
 function SubmitButton({ isPublished }: { isPublished?: boolean }) {
   const { pending } = useFormStatus();
@@ -33,7 +34,7 @@ function SubmitButton({ isPublished }: { isPublished?: boolean }) {
 }
 
 interface PostFormProps {
-  post?: Post;
+  post?: PostWithAuthorDTO;
 }
 
 export function PostForm({ post }: PostFormProps) {

@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { PostForm } from "@/components/post";
+import { getPostByIdEdit } from "@/data-access/post";
 import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 
@@ -9,22 +10,9 @@ export default async function EditPost({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/");
-  }
-
-  const post = await prisma.post.findUnique({
-    where: { id: parseInt(id) },
-    include: { author: true },
-  });
+  const post = await getPostByIdEdit(id);
 
   if (!post) {
-    notFound();
-  }
-
-  // Verify the user is the author
-  if (post.author.email !== session.user.email) {
     notFound();
   }
 
