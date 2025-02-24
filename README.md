@@ -1,8 +1,8 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## After setting up the project please read this article [How to Think About Security in Next.js](https://nextjs.org/blog/security-nextjs-server-components-actions) by Sebastian Markbåge.
 
-## Getting started
+## Getting Started
 
 ### 1. Fill out .env file
 
